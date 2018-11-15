@@ -31,7 +31,7 @@ function createProgram(gl, vertexShader, fragmentShader){
     gl.deleteProgram(program);
 }
 
-function main(vert, frag) {
+function main(vert, frag, image) {
     const canvas = document.querySelector("#glCanvas");
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
@@ -83,18 +83,30 @@ function main(vert, frag) {
     var offset = 0;
     gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
+    // Process image image
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
     var counter = 0;
 
     setInterval(function () {
         var positions = [
-            (Math.sin(counter / 10) * 0.5 + 0.5) * gl.canvas.width, counter,
+            (Math.sin(counter / 40) * 0.5 + 0.5) * gl.canvas.width, counter,
             0, 0,
-            (gl.canvas.width     - counter) % gl.canvas.width, 50
+            (gl.canvas.width - counter % gl.canvas.width) , 50
         ];
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
-        counter = (counter + 1) % gl.canvas.height;
+        counter++;
     }, 1000/ 60);
 
 
@@ -135,7 +147,12 @@ $(document).ready(function(){
     console.log(vs);
     console.log(fs);
 
-    main(vs, fs);
+    var img = new Image()
+    img.src = "src/img.png";
+    img.onload = function () {
+        main(vs, fs, img);
+    };
+
     // $(document).click(function (evt) {
     //     debugger;
     // });
