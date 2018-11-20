@@ -2,6 +2,34 @@
 // start here
 //
 
+function genField(x, y){
+    let data = [];
+
+    for(var i = 0; i < x; i++){
+        for(var u = 0; u < y; u++){
+            var a = Math.random() * 256;
+            data.push(Math.floor(a), (a - Math.floor(a)) * 256);
+
+            var b = Math.random() * 256;
+            data.push(b, (b - Math.floor(b)) * 256);
+        }
+    }
+    console.log(data);
+    return new Uint8Array(data);
+}
+
+function textureFromPixelArray(gl, dataArray, type, width, height) {
+    var dataTypedArray = new Uint8Array(dataArray);
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, type, width, height, 0, type, gl.UNSIGNED_BYTE, dataTypedArray);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    return texture;
+}
+
 
 function createShader(gl, type, source){
     var shader = gl.createShader(type);
@@ -53,15 +81,15 @@ function main(vert, frag, image) {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    var positions = [
-        10, gl.canvas.height,
-        0, 200,
-        50, 50
-    ];
+    var positions = [];
+
+    for(var i = 0; i < gl.canvas.width; i++){
+        for(var u = 0; u < gl.canvas.height; u++){
+            positions.push(i, u);
+        }
+    }
 
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    //
-    // webglUtils.resizeCanvasToDisplaySize(gl.canvas);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -84,30 +112,16 @@ function main(vert, frag, image) {
     gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
     // Process image image
-    var texture = gl.createTexture();
+    var img = genField(gl.canvas.width, gl.canvas.height);
+    var texture = textureFromPixelArray(gl, img, gl.RGBA, gl.canvas.width, gl.canvas.height);
+
+    // var fb = gl.createFramebuffer();
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture);
+
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-    var counter = 0;
-
-    setInterval(function () {
-        var positions = [
-            (Math.sin(counter / 40) * 0.5 + 0.5) * gl.canvas.width, counter,
-            0, 0,
-            (gl.canvas.width - counter % gl.canvas.width) , 50
-        ];
-
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-        counter++;
-    }, 1000/ 60);
+    gl.drawArrays(gl.POINTS, 0, gl.canvas.width * gl.canvas.height);
 
 
 
@@ -115,45 +129,30 @@ function main(vert, frag, image) {
 }
 
 $(document).ready(function(){
-    var vs, fs;
+    var shaders = [];
+    var shader_names = ["vertex-shader.vert", "fragment-shader.frag", "position_calculator.frag", "position_calculator.vert"];
 
-    // $.get("src/fragment-shader.frag", function (data) {
-    //     fs = data;
-    //     console.log(fs);
-    // });
-    //
-    // $.get("src/vertex-shader.vert", function (data) {
-    //     vs = data;
-    //     console.log(vs);
-    // });
-    //
+    // Load shaders
+    shader_names.forEach(e => {
+        let shader;
 
-    $.ajax({
-        url: "src/vertex-shader.vert",
-        success: function (data) {
-            vs = data;
-        },
-        async : false
+        $.ajax({
+            url: "src/" + e,
+            success: function (data) {
+                shader = data;
+            },
+            async : false
+        });
+
+        shaders.push(shader);
     });
 
-    $.ajax({
-        url: "src/fragment-shader.frag",
-        success: function (data) {
-            fs = data;
-        },
-        async : false
-    });
+    console.log("Shaders loaded");
 
-    console.log(vs);
-    console.log(fs);
-
-    var img = new Image()
+    var img = new Image();
     img.src = "src/img.png";
     img.onload = function () {
-        main(vs, fs, img);
+        main(shaders[0], shaders[1], img);
     };
 
-    // $(document).click(function (evt) {
-    //     debugger;
-    // });
 });

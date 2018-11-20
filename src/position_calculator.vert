@@ -1,3 +1,5 @@
+// Pass through every pixel to frag shader
+
 attribute vec2 a_position;
 
 uniform vec2 u_resolution;
