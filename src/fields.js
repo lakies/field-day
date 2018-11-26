@@ -1,7 +1,3 @@
-//
-// start here
-//
-
 function genField(x, y){
     let data = [];
 
@@ -14,7 +10,6 @@ function genField(x, y){
             data.push(b, (b - Math.floor(b)) * 256);
         }
     }
-    console.log(data);
     return new Uint8Array(data);
 }
 
@@ -59,7 +54,63 @@ function createProgram(gl, vertexShader, fragmentShader){
     gl.deleteProgram(program);
 }
 
-function main(vert, frag, image) {
+function setupFrame(gl, vert, frag, frameSize){
+    // Variables: gl,
+    var vertexShader = createShader(gl, gl.VERTEX_SHADER, vert.shader);
+    var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, frag.shader);
+    var program = createProgram(gl, vertexShader, fragmentShader);
+
+    var attributeLocations = [];
+    var uniformLocations = [];
+
+    let attrNames = vert.attrs.concat(frag.attrs);
+    let uniformNames = vert.uniforms.concat(frag.uniforms);
+
+    for(let i in attrNames){
+        // console.log(i);
+        attributeLocations.push(gl.getAttribLocation(program, attrNames[i]));
+    }
+
+    for(let i in uniformNames){
+        console.log(i);
+        uniformLocations.push(gl.getUniformLocation(program, uniformNames[i]));
+    }
+
+    // All pixel coordinates
+    var positionBuffer = gl.createBuffer();
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+    var positions = [];
+
+    for(let i = 0; i < frameSize.x; i++){
+        for(let u = 0; u < frameSize.y; u++){
+            positions.push(i, u);
+        }
+    }
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    // Set clear color to black, fully opaque
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    // Clear the color buffer with specified clear color
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    return {
+        "program" : program,
+        "attrs" : attributeLocations,
+        "uniforms" : uniformLocations,
+        "buffer" : positionBuffer
+    }
+}
+
+
+
+function main(vert, frag) {
     const canvas = document.querySelector("#glCanvas");
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
@@ -70,46 +121,67 @@ function main(vert, frag, image) {
         return;
     }
 
-    var vertexShader = createShader(gl, gl.VERTEX_SHADER, vert);
-    var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, frag);
-    
-    var program = createProgram(gl, vertexShader, fragmentShader);
+    console.log(vert);
+    console.log(frag);
 
-    var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
-    var positionBuffer = gl.createBuffer();
+    var frame = setupFrame(gl, vert, frag, {
+        "x" : gl.canvas.width,
+        "y" : gl.canvas.height
+    });
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.useProgram(frame.program);
 
-    var positions = [];
+    gl.uniform2f(frame.uniforms[0], gl.canvas.width, gl.canvas.height);
 
-    for(var i = 0; i < gl.canvas.width; i++){
-        for(var u = 0; u < gl.canvas.height; u++){
-            positions.push(i, u);
-        }
-    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, frame.buffer);
 
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    console.log(frame.attrs[0]);
+    gl.enableVertexAttribArray(frame.attrs[0]);
 
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.vertexAttribPointer(frame.attrs[0], 2, gl.FLOAT, false, 0, 0);
 
-    // Set clear color to black, fully opaque
-    gl.clearColor(0.0, 0.0, 0.0, 0.0);
-    // Clear the color buffer with specified clear color
-    gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(program);
 
-    gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-
-    gl.enableVertexAttribArray(positionAttributeLocation);
-
-    var size = 2;
-    var type = gl.FLOAT;
-    var normalize = false;
-    var stride = 0;
-    var offset = 0;
-    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+    // var vertexShader = createShader(gl, gl.VERTEX_SHADER, vert.shader);
+    // var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, frag.shader);
+    //
+    // var program = createProgram(gl, vertexShader, fragmentShader);
+    //
+    // var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    // var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+    // var positionBuffer = gl.createBuffer();
+    //
+    // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    //
+    // var positions = [];
+    //
+    // for(var i = 0; i < gl.canvas.width; i++){
+    //     for(var u = 0; u < gl.canvas.height; u++){
+    //         positions.push(i, u);
+    //     }
+    // }
+    //
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    //
+    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    //
+    // // Set clear color to black, fully opaque
+    // gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    // // Clear the color buffer with specified clear color
+    // gl.clear(gl.COLOR_BUFFER_BIT);
+    //
+    // gl.useProgram(program);
+    //
+    // gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+    //
+    // gl.enableVertexAttribArray(positionAttributeLocation);
+    //
+    // var size = 2;
+    // var type = gl.FLOAT;
+    // var normalize = false;
+    // var stride = 0;
+    // var offset = 0;
+    // gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
     // Process image image
     var img = genField(gl.canvas.width, gl.canvas.height);
@@ -122,15 +194,31 @@ function main(vert, frag, image) {
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     gl.drawArrays(gl.POINTS, 0, gl.canvas.width * gl.canvas.height);
-
-
-
-    
 }
+
+
+
 
 $(document).ready(function(){
     var shaders = [];
-    var shader_names = ["vertex-shader.vert", "fragment-shader.frag", "position_calculator.frag", "position_calculator.vert"];
+    var shader_names = ["vertex-shader.vert", "fragment-shader.frag", "position_calculator.frag", "position_calculator.vert", "point_drawer.frag", "point_drawer.vert"];
+    var shader_attributes = [
+        ["a_position"], //vertex-shader.vert
+        [], //fragment-shader.frag
+        [], //position_calculator.frag
+        [], //position_calculator.vert
+        [], //point_drawer.frag
+        ["a_image", "a_location"]  //point_drawer.vert
+    ];
+
+    var shader_uniforms = [
+        ["u_resolution"], //vertex-shader.vert
+        [], //fragment-shader.frag
+        [], //position_calculator.frag
+        [], //position_calculator.vert
+        [], //point_drawer.frag
+        ["u_resolution"]  //point_drawer.vert
+    ];
 
     // Load shaders
     shader_names.forEach(e => {
@@ -144,15 +232,15 @@ $(document).ready(function(){
             async : false
         });
 
-        shaders.push(shader);
+        shaders.push({
+            "shader" : shader,
+            "attrs" : shader_attributes[shader_names.indexOf(e)],
+            "uniforms" : shader_uniforms[shader_names.indexOf(e)]
+        });
     });
 
     console.log("Shaders loaded");
 
-    var img = new Image();
-    img.src = "src/img.png";
-    img.onload = function () {
-        main(shaders[0], shaders[1], img);
-    };
+    main(shaders[0], shaders[1]);
 
 });
