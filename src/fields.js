@@ -135,8 +135,8 @@ function main(vert, frag) {
     console.log(gl.canvas.height);
 
     var frame = setupProgram(gl, vert, frag, {
-        "x" : gl.canvas.width,
-        "y" : gl.canvas.height
+        "x" : gl.canvas.width / 2,
+        "y" : gl.canvas.height / 2
     });
 
     var fb = gl.createFramebuffer();
@@ -155,9 +155,10 @@ function main(vert, frag) {
 
     gl.vertexAttribPointer(frame.attrs[0], 2, gl.FLOAT, false, 0, 0);
 
+    var scaler = 4;
     // Process image image
-    var img = genField(gl.canvas.width, gl.canvas.height);
-    var texture = textureFromPixelArray(gl, img, gl.RGBA, gl.canvas.width, gl.canvas.height);
+    var img = genField(gl.canvas.width / scaler, gl.canvas.height / scaler);
+    var texture = textureFromPixelArray(gl, img, gl.RGBA, gl.canvas.width / scaler, gl.canvas.height / scaler);
 
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
