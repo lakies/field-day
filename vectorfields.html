@@ -18,6 +18,9 @@
   <script src="src/fields.js"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+  <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>
 
   <title>Field Day</title>
 
@@ -33,14 +36,22 @@
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item">
-        <a class="nav-link" href="about.html">Projektist
+        <a class="nav-link" href="vectorfields.html">Vektorväljadest
         </a>
       </li>
     </ul>
   </div>
 </nav>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+<div class="text-justify mt-5 mb-5 ml-5 mr-5">
+	<center><h1>Vektorväljad</h1></center>
+	<p>Vektorväärtusega funktsioone $F: R^2 \rightarrow R^2$ on võimalik visualiseerida vektorväljadena kus igal vektoril on suund ja kiirus. See tähendab, et punktist $(x, y)$ saab modelleerida funktsiooni $F(x, y)$ vektorina nagu näidatud alloleval joonisel.</p>
+	<center><img src="illustrations/vector_field_single_vector.png"></center>
+	<p>Kui seda sama protsessi korrata kõigi väärtuste jaoks mida $F(x, y)$ saab võtta on tulemuseks vektorväli millel on kujutatud antud funktsiooni vektorid. Näiteks kui on funktsioon $F(x, y) = (y, -x)$, siis on võimalik arvutada punktid $$F(1, 0) = (0, -1), F(0, 1) =(1, 0), F(1, 1) = (1, -1), F(1, 2) = (2, -1)$$ ning joonistades need vektorid vastavatest punktidest on tulemuseks allolev joonis.
+	<center><img src="illustrations/vector_field_sample_vectors.png"></center>
+	Kui võtta funktsioonile $F(x, y) = (y, -x)$ veelgi rohkem väärtuseid on näha, et vektorid mis sellel väljal asuvad, omavad kindlat struktuuri ehk liiguvad päripäeva suunas ringina.
+	<center><img src="illustrations/vector_field_circulate.png"></center></p>
+	<p>Käesoleva projekti eesmärgiks on visualiseerida erinevaid vektorväljasid ning ka nendel asuvate punktide liikumist. Vektorväljad omavad laialdast kasutust paljude loodusteaduslike valdkondade rakendustes. Mõned neist on näiteks tuule -ja ookeanihoovuste liikumine, vedelike voolamine, magnetväljade tugevus ja materjalide pingetaluvus.</p>
+</div>
 
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?
 </body>
 </html>
