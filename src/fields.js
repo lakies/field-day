@@ -54,7 +54,7 @@ function createProgram(gl, vertexShader, fragmentShader){
     gl.deleteProgram(program);
 }
 
-function setupFrame(gl, vert, frag, frameSize){
+function setupProgram(gl, vert, frag, frameSize){
     // Variables: gl,
     var vertexShader = createShader(gl, gl.VERTEX_SHADER, vert.shader);
     var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, frag.shader);
@@ -108,6 +108,13 @@ function setupFrame(gl, vert, frag, frameSize){
     }
 }
 
+function updateParticles(particlePositions){
+
+}
+
+function drawParticles(particlePositions){
+
+}
 
 
 function main(vert, frag) {
@@ -115,25 +122,34 @@ function main(vert, frag) {
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
 
+    gl.canvas.width = $("#glCanvas").width();
+    gl.canvas.height = $("#glCanvas").height();
+
     // Only continue if WebGL is available and working
     if (gl === null) {
         alert("Unable to initialize WebGL. Your browser or machine may not support it.");
         return;
     }
 
-    console.log(vert);
-    console.log(frag);
+    console.log(gl.canvas.width);
+    console.log(gl.canvas.height);
 
-    var frame = setupFrame(gl, vert, frag, {
+    var frame = setupProgram(gl, vert, frag, {
         "x" : gl.canvas.width,
         "y" : gl.canvas.height
     });
+
+    var fb = gl.createFramebuffer();
 
     gl.useProgram(frame.program);
 
     gl.uniform2f(frame.uniforms[0], gl.canvas.width, gl.canvas.height);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, frame.buffer);
+
+    var positions = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
     gl.enableVertexAttribArray(frame.attrs[0]);
 
@@ -143,12 +159,11 @@ function main(vert, frag) {
     var img = genField(gl.canvas.width, gl.canvas.height);
     var texture = textureFromPixelArray(gl, img, gl.RGBA, gl.canvas.width, gl.canvas.height);
 
-    var fb = gl.createFramebuffer();
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.drawArrays(gl.POINTS, 0, gl.canvas.width * gl.canvas.height);
+    // gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     // setInterval(function () {
     //     console.log("hi");
@@ -162,7 +177,11 @@ function main(vert, frag) {
 
 
 $(document).ready(function(){
-    let parent = $("#glCanvas").parent();
+    // $("body").height(window.innerHeight);
+    // $("#glCanvas").height($("body").height());
+    // $("#glCanvas").width(window.innerWidth - 10);
+    // $("#glCanvas").height(window.innerHeight - 10);
+    // console.log($("#glCanvas").width());
     // $("#glCanvas").width(parent.width());
     // $("#glCanvas").height(parent.height());
 

@@ -16,6 +16,7 @@
   <script src="src/vertex-shader.vert" type="x-shader/x-fragment" id="vert_shader"></script>
   <script src="src/fragment-shader.frag" type="x-shader/x-fragment" id="frag_shader"></script>
   <script src="src/fields.js"></script>
+  <link rel="stylesheet" href="src/styles.css">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
@@ -27,7 +28,7 @@
 </head>
 <body  class='index'>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="position: absolute; width: 100%;">
   <a class="navbar-brand" href="index.html">Field Day</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -56,7 +57,7 @@
   </div>
 </nav>
 
-  <canvas id="glCanvas" width="640" height="480"></canvas>
+  <canvas id="glCanvas" style="width: 100%; height: 100%"></canvas>
 
 </body>
 </html>
