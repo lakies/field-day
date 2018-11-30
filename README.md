@@ -30,7 +30,7 @@ Kuidas vektorväljad ise täpsemalt töötavad on projekti vahelehel nimega "vek
 * Kaarel Kaasla
     * Projekti *front-end* osa. Lehe struktuur puhtas HTML-s, kujundus (CSS) Bootstrapis ning interaktiivsus kasutades jQuery. Lisaks minimalistlik ülevaade vektorväljadest kasutades MathJax teeki.
 
-#### Tekkinud raskused
+#### Tekkinud raskused ja hinnang projektile
 
 ##### Adrian:
 
