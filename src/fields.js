@@ -117,7 +117,7 @@ function drawParticles(particlePositions){
 }
 
 
-function main(vert, frag) {
+function main(vert, frag, particle_shaders = []) {
     const canvas = document.querySelector("#glCanvas");
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
@@ -141,36 +141,62 @@ function main(vert, frag) {
 
     var fb = gl.createFramebuffer();
 
-    gl.useProgram(frame.program);
+    // gl.useProgram(frame.program);
+    //
+    // gl.uniform2f(frame.uniforms[0], gl.canvas.width, gl.canvas.height);
+    //
+    // gl.bindBuffer(gl.ARRAY_BUFFER, frame.buffer);
+    //
+    // var positions = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+    //
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    //
+    // gl.enableVertexAttribArray(frame.attrs[0]);
+    //
+    // gl.vertexAttribPointer(frame.attrs[0], 2, gl.FLOAT, false, 0, 0);
 
-    gl.uniform2f(frame.uniforms[0], gl.canvas.width, gl.canvas.height);
+    var n_particles = 10000;
+    // The number of particles is a perfect square, this is the side length of it
+    var particles_resolution = Math.ceil(Math.sqrt(n_particles));
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, frame.buffer);
+    // Recalculate particle count to be a square
+    n_particles = n_particles * n_particles;
 
-    var positions = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+    // Generate an initial particle position texture
+    var img = genField(particles_resolution, particles_resolution);
+    var texture = textureFromPixelArray(gl, img, gl.RGBA, particles_resolution, particles_resolution);
 
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    console.log(particle_shaders[1], particle_shaders[0]);
+    var particle_drawer = setupProgram(gl, particle_shaders[1], particle_shaders[0], {
+        "x" : gl.canvas.width / 2,
+        "y" : gl.canvas.height / 2
+    });
 
-    gl.enableVertexAttribArray(frame.attrs[0]);
+    gl.useProgram(particle_drawer.program);
 
-    gl.vertexAttribPointer(frame.attrs[0], 2, gl.FLOAT, false, 0, 0);
+    // u_particles_resolution
+    gl.uniform1f(particle_drawer.uniforms[1], particles_resolution);
 
-    var scaler = 4;
-    // Process image image
-    var img = genField(gl.canvas.width / scaler, gl.canvas.height / scaler);
-    var texture = textureFromPixelArray(gl, img, gl.RGBA, gl.canvas.width / scaler, gl.canvas.height / scaler);
+    // Particle index attribute
+    gl.bindBuffer(gl.ARRAY_BUFFER, particle_drawer.buffer);
 
+    var particle_positions = new Float32Array(n_particles);
+    for(var i = 0; i < n_particles; i++){
+        particle_positions[i] = i;
+    }
 
+    gl.bufferData(gl.ARRAY_BUFFER, particle_positions, gl.STATIC_DRAW);
+
+    gl.enableVertexAttribArray(particle_drawer.attrs[0]);
+
+    gl.vertexAttribPointer(particle_drawer.attrs[0], 1, gl.FLOAT, false, 0, 0);
+
+    // u_image
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     // gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.drawArrays(gl.POINTS, 0, n_particles);
 
-    // setInterval(function () {
-    //     console.log("hi");
-    //     img = genField(gl.canvas.width, gl.canvas.height);
-    //     texture = textureFromPixelArray(gl, img, gl.RGBA, gl.canvas.width, gl.canvas.height);
-    // }, 1000/60)
 
 }
 
@@ -178,13 +204,6 @@ function main(vert, frag) {
 
 
 $(document).ready(function(){
-    // $("body").height(window.innerHeight);
-    // $("#glCanvas").height($("body").height());
-    // $("#glCanvas").width(window.innerWidth - 10);
-    // $("#glCanvas").height(window.innerHeight - 10);
-    // console.log($("#glCanvas").width());
-    // $("#glCanvas").width(parent.width());
-    // $("#glCanvas").height(parent.height());
 
     var shaders = [];
     var shader_names = ["vertex-shader.vert", "fragment-shader.frag", "position_calculator.frag", "position_calculator.vert", "point_drawer.frag", "point_drawer.vert"];
@@ -194,7 +213,7 @@ $(document).ready(function(){
         [], //position_calculator.frag
         [], //position_calculator.vert
         [], //point_drawer.frag
-        ["a_image", "a_location"]  //point_drawer.vert
+        ["a_particle_index"]  //point_drawer.vert
     ];
 
     var shader_uniforms = [
@@ -203,7 +222,7 @@ $(document).ready(function(){
         [], //position_calculator.frag
         [], //position_calculator.vert
         [], //point_drawer.frag
-        ["u_resolution"]  //point_drawer.vert
+        ["u_image", "u_particles_resolution"]  //point_drawer.vert
     ];
 
     // Load shaders
@@ -227,6 +246,6 @@ $(document).ready(function(){
 
     console.log("Shaders loaded");
 
-    main(shaders[0], shaders[1]);
+    main(shaders[0], shaders[1], [shaders[4], shaders[5]]);
 
 });
