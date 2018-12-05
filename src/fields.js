@@ -67,31 +67,15 @@ function setupProgram(gl, vert, frag, frameSize){
     let uniformNames = vert.uniforms.concat(frag.uniforms);
 
     for(let i in attrNames){
-        // console.log(i);
         attributeLocations.push(gl.getAttribLocation(program, attrNames[i]));
     }
 
     for(let i in uniformNames){
-        console.log(i);
         uniformLocations.push(gl.getUniformLocation(program, uniformNames[i]));
     }
 
     // All pixel coordinates
     var positionBuffer = gl.createBuffer();
-
-    // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    //
-    // var positions = [];
-    //
-    // for(let i = 0; i < frameSize.x * frameSize.y; i++){
-    //     positions.push(i);
-    // }
-    //
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    //
-    // gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
     // Set clear color to black, fully opaque
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -106,7 +90,19 @@ function setupProgram(gl, vert, frag, frameSize){
     }
 }
 
-function updateParticles(gl){
+function updateParticles(gl, updater, res, last_frame, next_frame){
+    gl.useProgram(updater.program.program);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, updater.fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, next_frame);
+
+    gl.viewport(0, 0, res, res);
+
+    gl.uniform1f(updater.program.uniforms[]);
+
+    gl.bindTexture(gl.TEXTURE_2D, last_frame);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 
 }
 
@@ -168,25 +164,26 @@ function setupDrawer(gl, particle_shaders){
     }
 }
 
-function setupUpdater(gl, shaders, res, pos_buffer){
+function setupUpdater(gl, shaders, res){
     var position_updater = setupProgram(gl, shaders[0], shaders[1], {
         "x" : res,
         "y" : res
     });
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, pos_buffer);
 
+    gl.bindBuffer(gl.ARRAY_BUFFER, position_updater.buffer);
+    var positions = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(position_updater.attrs[0]);
-
-    gl.vertexAttribPointer(position_updater.attrs[0], 1, gl.FLOAT, false, 0, 0);
-
+    gl.vertexAttribPointer(position_updater.attrs[0], 2, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     var fb = gl.createFramebuffer();
 
     return {
         "program" : position_updater,
-        "fb" : fb
+        "fb" : fb,
+        "res" : res
     }
 }
 
@@ -205,34 +202,16 @@ function main(vert, frag, particle_shaders = [], update_shaders = []) {
         return;
     }
 
-    console.log(gl.canvas.width);
-    console.log(gl.canvas.height);
-
     var frame = setupProgram(gl, vert, frag, {
         "x" : gl.canvas.width / 2,
         "y" : gl.canvas.height / 2
     });
 
-
-
-    // gl.useProgram(frame.program);
-    //
-    // gl.uniform2f(frame.uniforms[0], gl.canvas.width, gl.canvas.height);
-    //
-    // gl.bindBuffer(gl.ARRAY_BUFFER, frame.buffer);
-    //
-    // var positions = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
-    //
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    //
-    // gl.enableVertexAttribArray(frame.attrs[0]);
-    //
-    // gl.vertexAttribPointer(frame.attrs[0], 2, gl.FLOAT, false, 0, 0);
-
-
     var drawer = setupDrawer(gl, particle_shaders);
+    var updater = setupUpdater(gl, update_shaders, drawer.resolution);
 
     drawParticles(gl, drawer);
+    updateParticles(gl, updater);
 
 
 
