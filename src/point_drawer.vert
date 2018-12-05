@@ -17,6 +17,6 @@ void main(){
             part.r / 255.0 + part.b,
             part.g / 255.0 + part.a);
 
-    gl_PointSize = 1.5;
+    gl_PointSize = 2.0;
     gl_Position = vec4(1.0 - 2.0 * particle_position.x, 1.0 - 2.0 * particle_position.y, 0, 1);
 }
