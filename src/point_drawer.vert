@@ -1,4 +1,6 @@
 // Take the framebuffer as an input and based on that take the position
+precision mediump float;
+
 uniform sampler2D u_image;
 uniform float u_particles_resolution;
 

@@ -14,7 +14,7 @@ function genField(x, y){
 }
 
 function textureFromPixelArray(gl, dataArray, type, width, height) {
-    var dataTypedArray = new Uint8Array(dataArray);
+    var dataTypedArray = dataArray ? new Uint8Array(dataArray) : null;
     var texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, type, width, height, 0, type, gl.UNSIGNED_BYTE, dataTypedArray);
@@ -22,6 +22,8 @@ function textureFromPixelArray(gl, dataArray, type, width, height) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
     return texture;
 }
 
@@ -54,25 +56,33 @@ function createProgram(gl, vertexShader, fragmentShader){
     gl.deleteProgram(program);
 }
 
-function setupProgram(gl, vert, frag, frameSize){
-    // Variables: gl,
-    var vertexShader = createShader(gl, gl.VERTEX_SHADER, vert.shader);
-    var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, frag.shader);
+function setupAttrib(gl, program, size){
+    gl.bindBuffer(gl.ARRAY_BUFFER, program.buffer);
+    gl.enableVertexAttribArray(program.attrs.a_particle_index);
+    gl.vertexAttribPointer(program.attrs.a_particle_index, size, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+function setupProgram(gl, vert, frag){
+    var vertexShader = vert.shader;
+    var fragmentShader = frag.shader;
     var program = createProgram(gl, vertexShader, fragmentShader);
 
-    var attributeLocations = [];
-    var uniformLocations = [];
+    var attributeLocations = {};
+    var uniformLocations = {};
 
     let attrNames = vert.attrs.concat(frag.attrs);
     let uniformNames = vert.uniforms.concat(frag.uniforms);
 
     for(let i in attrNames){
-        attributeLocations.push(gl.getAttribLocation(program, attrNames[i]));
+        attributeLocations[attrNames[i]] = (gl.getAttribLocation(program, attrNames[i]));
     }
 
     for(let i in uniformNames){
-        uniformLocations.push(gl.getUniformLocation(program, uniformNames[i]));
+        uniformLocations[uniformNames[i]] = (gl.getUniformLocation(program, uniformNames[i]));
     }
+
+    console.log(uniformLocations);
 
     // All pixel coordinates
     var positionBuffer = gl.createBuffer();
@@ -90,92 +100,103 @@ function setupProgram(gl, vert, frag, frameSize){
     }
 }
 
-function updateParticles(gl, updater, res, last_frame, next_frame){
+function updateParticles(gl, updater, res, frame){
     gl.useProgram(updater.program.program);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, updater.fb);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, next_frame);
+
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, frame.curr, 0);
 
     gl.viewport(0, 0, res, res);
+    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    setupAttrib(gl, updater.program, 1);
 
-    gl.uniform1f(updater.program.uniforms[]);
+    gl.uniform1f(updater.program.uniforms.u_particles_resolution, res); // u_particles_resolution
+    gl.uniform1f(updater.program.uniforms.u_step, 0.01); // u_step
 
-    gl.bindTexture(gl.TEXTURE_2D, last_frame);
+    gl.bindTexture(gl.TEXTURE_2D, frame.prev);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.drawArrays(gl.POINTS, 0, res * res);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    var temp = frame.prev;
+    frame.prev = frame.curr;
+    frame.curr = temp;
 
 }
 
 function drawParticles(gl, drawer){
     gl.useProgram(drawer.program.program);
 
+    setupAttrib(gl, drawer.program, 1);
+
     // u_particles_resolution
-    gl.uniform1f(drawer.program.uniforms[1], drawer.resolution);
+    gl.uniform1f(drawer.program.uniforms.u_particles_resolution, drawer.resolution);
 
     // u_image
-    gl.bindTexture(gl.TEXTURE_2D, drawer.tex);
+    gl.bindTexture(gl.TEXTURE_2D, drawer.tex.prev);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
 
     gl.drawArrays(gl.POINTS, 0, drawer.count);
 
 }
 
 function setupDrawer(gl, particle_shaders){
-    var particle_drawer = setupProgram(gl, particle_shaders[0], particle_shaders[1], {
-        "x" : gl.canvas.width / 2,
-        "y" : gl.canvas.height / 2
-    });
+    var particle_drawer = setupProgram(gl, particle_shaders[0], particle_shaders[1]);
 
-    var n_particles = 10000;
+    var n_particles = 100000;
     // The number of particles is a perfect square, this is the side length of it
     var particles_resolution = Math.ceil(Math.sqrt(n_particles));
 
     // Recalculate particle count to be a square
-    n_particles = n_particles * n_particles;
+    n_particles = particles_resolution * particles_resolution;
 
     var particle_positions = new Float32Array(n_particles);
     for(var i = 0; i < n_particles; i++){
         particle_positions[i] = i;
     }
 
-    // Generate an initial particle position texture
-    var img = genField(particles_resolution, particles_resolution);
-    var texture = textureFromPixelArray(gl, img, gl.RGBA, particles_resolution, particles_resolution);
-
     // Particle index attribute
     gl.bindBuffer(gl.ARRAY_BUFFER, particle_drawer.buffer);
 
     gl.bufferData(gl.ARRAY_BUFFER, particle_positions, gl.STATIC_DRAW);
 
-    gl.enableVertexAttribArray(particle_drawer.attrs[0]);
-
-    gl.vertexAttribPointer(particle_drawer.attrs[0], 1, gl.FLOAT, false, 0, 0);
-
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    // Generate an initial particle position texture
+    var img = genField(particles_resolution, particles_resolution);
+    var texture = textureFromPixelArray(gl, img, gl.RGBA, particles_resolution, particles_resolution);
+    var frameBufferTargetTexture = textureFromPixelArray(gl, null, gl.RGBA, particles_resolution, particles_resolution);
 
     return {
         "program" : particle_drawer,
-        "positions" : particle_positions,
         "resolution" : particles_resolution,
-        "tex" : texture,
-        "last_tex" : undefined,
+        "tex" : {
+            "curr" : frameBufferTargetTexture, // this is set every frame by the updater
+            "prev" : texture
+        },
         "count" : n_particles
     }
 }
 
 function setupUpdater(gl, shaders, res){
-    var position_updater = setupProgram(gl, shaders[0], shaders[1], {
-        "x" : res,
-        "y" : res
-    });
+    var position_updater = setupProgram(gl, shaders[0], shaders[1]);
 
+    // Somehow the attribute index getting doesnt work properly
+    // position_updater.attrs[0]++;
 
     gl.bindBuffer(gl.ARRAY_BUFFER, position_updater.buffer);
-    var positions = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(position_updater.attrs[0]);
-    gl.vertexAttribPointer(position_updater.attrs[0], 2, gl.FLOAT, false, 0, 0);
+
+    var count = res * res;
+    var particle_positions = new Float32Array(count);
+    for(var i = 0; i < count; i++){
+        particle_positions[i] = i;
+    }
+
+    gl.bufferData(gl.ARRAY_BUFFER, particle_positions, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     var fb = gl.createFramebuffer();
@@ -188,7 +209,7 @@ function setupUpdater(gl, shaders, res){
 }
 
 
-function main(vert, frag, particle_shaders = [], update_shaders = []) {
+function main(shaders = []) {
     const canvas = document.querySelector("#glCanvas");
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
@@ -202,18 +223,38 @@ function main(vert, frag, particle_shaders = [], update_shaders = []) {
         return;
     }
 
-    var frame = setupProgram(gl, vert, frag, {
-        "x" : gl.canvas.width / 2,
-        "y" : gl.canvas.height / 2
-    });
+    // Create shaders
+    for(var i = 2; i <= 5; i++){
+        let type = i % 2 === 0 ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER;
+        shaders[i].shader = createShader(gl, type, shaders[i].shader)
+    }
 
-    var drawer = setupDrawer(gl, particle_shaders);
-    var updater = setupUpdater(gl, update_shaders, drawer.resolution);
+    console.log("Shaders created");
 
+    // var frame = setupProgram(gl, vert, frag, {
+    //     "x" : gl.canvas.width / 2,
+    //     "y" : gl.canvas.height / 2
+    // });
+
+    var drawer = setupDrawer(gl, [shaders[5], shaders[4]]);
+    var updater = setupUpdater(gl, [shaders[3], shaders[2]], drawer.resolution);
+    console.log("Starting main loop");
+
+    console.log(updater);
+    updateParticles(gl, updater, drawer.resolution, drawer.tex);
     drawParticles(gl, drawer);
-    updateParticles(gl, updater);
 
+    setInterval(function () {
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.STENCIL_TEST);
+        gl.bindTexture(gl.TEXTURE_2D, drawer.tex.prev);
 
+        drawParticles(gl, drawer);
+        updateParticles(gl, updater, drawer.resolution, drawer.tex);
+
+    }, 1000 / 5);
+
+    // console.log(drawer.tex);
 
 }
 
@@ -263,6 +304,6 @@ $(document).ready(function(){
 
     console.log("Shaders loaded");
 
-    main(shaders[0], shaders[1], [shaders[5], shaders[4]], [shaders[3], shaders[2]]);
+    main(shaders);
 
 });
