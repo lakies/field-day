@@ -2,9 +2,9 @@
 
 precision mediump float;
 
-attribute float step;
+uniform float u_step;
 uniform sampler2D u_image;
-varying vec2 v_texCoord;
+varying vec2 v_tex_pos;
 
 vec2 calculate_new_pos(vec2 pos){
     vec2 vel;
@@ -13,19 +13,19 @@ vec2 calculate_new_pos(vec2 pos){
     vel.x = pos.x;
     vel.y = pos.y;
 
-    return pos + vel * step;
+    return pos + vel * u_step;
 }
 
 void main(){
-    vec4 pixel = texture2D(u_image, v_texCoord);
+    vec4 pixel = texture2D(u_image, v_tex_pos);
 
-    // TODO: decode position from pixel values
-    vec2 coord;
+    // Get particle's position based on the pixel color
+    vec2 particle_position = vec2(
+            pixel.r / 255.0 + pixel.g,
+            pixel.b / 255.0 + pixel.a);
+//    vec2 particle_position = vec2(0.0, 0.0);
 
-    vec2 new_pos = calculate_new_pos(coord);
+    vec2 new_pos = calculate_new_pos(particle_position);
 
-    // TODO: encode new position into pixel
-    vec4 new_pixel;
-
-    gl_FragColor = new_pixel;
+    gl_FragColor = vec4(0, 0, 0, 0);//vec4(fract(new_pos * 255.0), floor(new_pos * 255.0) / 255.0);
 }

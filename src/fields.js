@@ -79,21 +79,19 @@ function setupProgram(gl, vert, frag, frameSize){
     // All pixel coordinates
     var positionBuffer = gl.createBuffer();
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    //
+    // var positions = [];
+    //
+    // for(let i = 0; i < frameSize.x * frameSize.y; i++){
+    //     positions.push(i);
+    // }
+    //
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    //
+    // gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-    var positions = [];
-
-    for(let i = 0; i < frameSize.x; i++){
-        for(let u = 0; u < frameSize.y; u++){
-            positions.push(i, u);
-        }
-    }
-
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
     // Set clear color to black, fully opaque
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -108,16 +106,92 @@ function setupProgram(gl, vert, frag, frameSize){
     }
 }
 
-function updateParticles(particlePositions){
+function updateParticles(gl){
 
 }
 
-function drawParticles(particlePositions){
+function drawParticles(gl, drawer){
+    gl.useProgram(drawer.program.program);
+
+    // u_particles_resolution
+    gl.uniform1f(drawer.program.uniforms[1], drawer.resolution);
+
+    // u_image
+    gl.bindTexture(gl.TEXTURE_2D, drawer.tex);
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.drawArrays(gl.POINTS, 0, drawer.count);
 
 }
 
+function setupDrawer(gl, particle_shaders){
+    var particle_drawer = setupProgram(gl, particle_shaders[0], particle_shaders[1], {
+        "x" : gl.canvas.width / 2,
+        "y" : gl.canvas.height / 2
+    });
 
-function main(vert, frag, particle_shaders = []) {
+    var n_particles = 10000;
+    // The number of particles is a perfect square, this is the side length of it
+    var particles_resolution = Math.ceil(Math.sqrt(n_particles));
+
+    // Recalculate particle count to be a square
+    n_particles = n_particles * n_particles;
+
+    var particle_positions = new Float32Array(n_particles);
+    for(var i = 0; i < n_particles; i++){
+        particle_positions[i] = i;
+    }
+
+    // Generate an initial particle position texture
+    var img = genField(particles_resolution, particles_resolution);
+    var texture = textureFromPixelArray(gl, img, gl.RGBA, particles_resolution, particles_resolution);
+
+    // Particle index attribute
+    gl.bindBuffer(gl.ARRAY_BUFFER, particle_drawer.buffer);
+
+    gl.bufferData(gl.ARRAY_BUFFER, particle_positions, gl.STATIC_DRAW);
+
+    gl.enableVertexAttribArray(particle_drawer.attrs[0]);
+
+    gl.vertexAttribPointer(particle_drawer.attrs[0], 1, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    return {
+        "program" : particle_drawer,
+        "positions" : particle_positions,
+        "resolution" : particles_resolution,
+        "tex" : texture,
+        "last_tex" : undefined,
+        "count" : n_particles
+    }
+}
+
+function setupUpdater(gl, shaders, res, pos_buffer){
+    var position_updater = setupProgram(gl, shaders[0], shaders[1], {
+        "x" : res,
+        "y" : res
+    });
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, pos_buffer);
+
+    gl.enableVertexAttribArray(position_updater.attrs[0]);
+
+    gl.vertexAttribPointer(position_updater.attrs[0], 1, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    var fb = gl.createFramebuffer();
+
+    return {
+        "program" : position_updater,
+        "fb" : fb
+    }
+}
+
+
+function main(vert, frag, particle_shaders = [], update_shaders = []) {
     const canvas = document.querySelector("#glCanvas");
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
@@ -139,7 +213,7 @@ function main(vert, frag, particle_shaders = []) {
         "y" : gl.canvas.height / 2
     });
 
-    var fb = gl.createFramebuffer();
+
 
     // gl.useProgram(frame.program);
     //
@@ -155,47 +229,11 @@ function main(vert, frag, particle_shaders = []) {
     //
     // gl.vertexAttribPointer(frame.attrs[0], 2, gl.FLOAT, false, 0, 0);
 
-    var n_particles = 10000;
-    // The number of particles is a perfect square, this is the side length of it
-    var particles_resolution = Math.ceil(Math.sqrt(n_particles));
 
-    // Recalculate particle count to be a square
-    n_particles = n_particles * n_particles;
+    var drawer = setupDrawer(gl, particle_shaders);
 
-    // Generate an initial particle position texture
-    var img = genField(particles_resolution, particles_resolution);
-    var texture = textureFromPixelArray(gl, img, gl.RGBA, particles_resolution, particles_resolution);
+    drawParticles(gl, drawer);
 
-    console.log(particle_shaders[1], particle_shaders[0]);
-    var particle_drawer = setupProgram(gl, particle_shaders[1], particle_shaders[0], {
-        "x" : gl.canvas.width / 2,
-        "y" : gl.canvas.height / 2
-    });
-
-    gl.useProgram(particle_drawer.program);
-
-    // u_particles_resolution
-    gl.uniform1f(particle_drawer.uniforms[1], particles_resolution);
-
-    // Particle index attribute
-    gl.bindBuffer(gl.ARRAY_BUFFER, particle_drawer.buffer);
-
-    var particle_positions = new Float32Array(n_particles);
-    for(var i = 0; i < n_particles; i++){
-        particle_positions[i] = i;
-    }
-
-    gl.bufferData(gl.ARRAY_BUFFER, particle_positions, gl.STATIC_DRAW);
-
-    gl.enableVertexAttribArray(particle_drawer.attrs[0]);
-
-    gl.vertexAttribPointer(particle_drawer.attrs[0], 1, gl.FLOAT, false, 0, 0);
-
-    // u_image
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    // gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.drawArrays(gl.POINTS, 0, n_particles);
 
 
 }
@@ -211,7 +249,7 @@ $(document).ready(function(){
         ["a_position"], //vertex-shader.vert
         [], //fragment-shader.frag
         [], //position_calculator.frag
-        [], //position_calculator.vert
+        ["a_particle_index"], //position_calculator.vert
         [], //point_drawer.frag
         ["a_particle_index"]  //point_drawer.vert
     ];
@@ -219,8 +257,8 @@ $(document).ready(function(){
     var shader_uniforms = [
         ["u_resolution"], //vertex-shader.vert
         [], //fragment-shader.frag
-        [], //position_calculator.frag
-        [], //position_calculator.vert
+        ["u_step", "u_image"], //position_calculator.frag
+        ["u_particles_resolution"], //position_calculator.vert
         [], //point_drawer.frag
         ["u_image", "u_particles_resolution"]  //point_drawer.vert
     ];
@@ -246,6 +284,6 @@ $(document).ready(function(){
 
     console.log("Shaders loaded");
 
-    main(shaders[0], shaders[1], [shaders[4], shaders[5]]);
+    main(shaders[0], shaders[1], [shaders[5], shaders[4]], [shaders[3], shaders[2]]);
 
 });
