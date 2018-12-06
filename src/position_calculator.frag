@@ -22,19 +22,22 @@ vec4 calculate_new_pos(vec2 p){
     // Here goes the vector field function
 
     // One version
-//    v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;
-//    v.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;
+//    v.x =  -2.0 * mod(floor(p.y), 2.0) + 1.0;
+//    v.y =  -2.0 * mod(floor(p.x), 2.0) + 1.0;
 
 // Second
-//    v.x =  pow(abs(p.y), abs(p.x));
-//    v.y =  cos(p.x * 20.0 / p.y);
+//    v.x =  pow(abs(p.y / 10.0), abs(p.x / 10.0));
+//    v.y =  cos(p.x * 2.0 / p.y / 10.0);
 
-v.x = p.y / log(abs(p.y));
-  v.y = sin(p.x)*tan(p.y / mod(v.x, p.y));
+//v.x = p.y / log(p.y);
+//  v.y = sin(p.x)*tan(p.y / mod(v.x, 2.0));
+
+     v.x = p.y;
+   v.y = -p.x / ((1.0 + p.x * p.x) * (1.0 + p.x * p.x));
 
 
 
-    vec4 returned = vec4((p + v * u_step) / 10.0 - vec2(-0.5, -0.5), v / 10.0);
+    vec4 returned = vec4((p + v * u_step) / 10.0 + vec2(0.5, 0.5), v / 10.0);
 
     return returned;
 }
