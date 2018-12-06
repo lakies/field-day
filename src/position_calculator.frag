@@ -14,16 +14,27 @@ float rand(const vec2 co) {
     return fract(sin(t) * (rand_constants.z + t));
 }
 
-vec4 calculate_new_pos(vec2 pos){
-    vec2 vel;
-    pos = pos + vec2(-0.5, -0.5);
-    // Here goes the vector field function
-    vel.x =  -2.0 * mod(floor(pos.y * 10.0), 2.0) + 1.0;
-          vel.y =  -2.0 * mod(floor(pos.x * 10.0), 2.0) + 1.0;
-//    vel.x =  1.0;
-//    vel.y =  1.0;
+vec4 calculate_new_pos(vec2 p){
+    vec2 v;
+    p = p - vec2(0.5, 0.5);
 
-    vec4 returned = vec4(pos + vel * u_step - vec2(-0.5, -0.5), vel);
+    p = p * 10.0;
+    // Here goes the vector field function
+
+    // One version
+//    v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;
+//    v.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;
+
+// Second
+//    v.x =  pow(abs(p.y), abs(p.x));
+//    v.y =  cos(p.x * 20.0 / p.y);
+
+v.x = p.y / log(abs(p.y));
+  v.y = sin(p.x)*tan(p.y / mod(v.x, p.y));
+
+
+
+    vec4 returned = vec4((p + v * u_step) / 10.0 - vec2(-0.5, -0.5), v / 10.0);
 
     return returned;
 }

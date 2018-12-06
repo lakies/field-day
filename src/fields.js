@@ -112,7 +112,7 @@ function updateParticles(gl, updater, res, frame){
     setupAttrib(gl, updater.program, 1);
 
     gl.uniform1f(updater.program.uniforms.u_particles_resolution, res); // u_particles_resolution
-    gl.uniform1f(updater.program.uniforms.u_step, 0.005); // u_step
+    gl.uniform1f(updater.program.uniforms.u_step, 0.006); // u_step
     gl.uniform1f(updater.program.uniforms.u_rand_seed, Math.random());
 
     gl.bindTexture(gl.TEXTURE_2D, frame.prev);
@@ -130,8 +130,8 @@ function updateParticles(gl, updater, res, frame){
 function drawParticles(gl, drawer){
     gl.useProgram(drawer.program.program);
 
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, drawer.fb);
-    // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, drawer.tex.drawn, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, drawer.fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, drawer.tex.drawn, 0);
 
     setupAttrib(gl, drawer.program, 1);
 
@@ -146,7 +146,7 @@ function drawParticles(gl, drawer){
 
     gl.drawArrays(gl.POINTS, 0, drawer.count);
 
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 }
 
@@ -166,7 +166,7 @@ function drawDisplay(gl, displayer, texture){
 function setupDrawer(gl, particle_shaders){
     var particle_drawer = setupProgram(gl, particle_shaders[0], particle_shaders[1]);
 
-    var n_particles = 1000;
+    var n_particles = 10000;
     // The number of particles is a perfect square, this is the side length of it
     var particles_resolution = Math.ceil(Math.sqrt(n_particles));
 
@@ -296,7 +296,7 @@ function main(shaders = []) {
 
         drawParticles(gl, drawer);
 
-        // drawDisplay(gl, display, drawer.tex.drawn);
+        drawDisplay(gl, display, drawer.tex.drawn);
 
     }, 1000 / 60);
 
