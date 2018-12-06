@@ -88,7 +88,7 @@ function setupProgram(gl, vert, frag){
     var positionBuffer = gl.createBuffer();
 
     // Set clear color to black, fully opaque
-    gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    gl.clearColor(0.0745, 0.1607, 0.30980392156, 1.0);
     // Clear the color buffer with specified clear color
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -112,7 +112,7 @@ function updateParticles(gl, updater, res, frame){
     setupAttrib(gl, updater.program, 1);
 
     gl.uniform1f(updater.program.uniforms.u_particles_resolution, res); // u_particles_resolution
-    gl.uniform1f(updater.program.uniforms.u_step, 0.0019); // u_step
+    gl.uniform1f(updater.program.uniforms.u_step, 0.005); // u_step
     gl.uniform1f(updater.program.uniforms.u_rand_seed, Math.random());
 
     gl.bindTexture(gl.TEXTURE_2D, frame.prev);
@@ -143,6 +143,8 @@ function drawParticles(gl, drawer){
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
+    // gl.clear(gl.COLOR_BUFFER_BIT);
+    // gl.clearColor(0.0745, 0.1607, 0.30980392156, 0.2);
 
     gl.drawArrays(gl.POINTS, 0, drawer.count);
 
@@ -182,7 +184,7 @@ function fadeFrame(gl, fader, texture){
 function setupDrawer(gl, particle_shaders){
     var particle_drawer = setupProgram(gl, particle_shaders[0], particle_shaders[1]);
 
-    var n_particles = 5000;
+    var n_particles = 50000;
     // The number of particles is a perfect square, this is the side length of it
     var particles_resolution = Math.ceil(Math.sqrt(n_particles));
 
@@ -397,6 +399,20 @@ $(document).ready(function(){
 
     console.log("Shaders loaded");
 
+    $("button").click(function () {
+        $("textarea").val();
+    });
+
+    $("#setDisplay").click(function () {
+        console.log("clicked");
+        if($("#hide").css("display") === "none"){
+            $("#hide").css("display","");
+        }else{
+            $("#hide").css("display","none");
+        }
+    });
+
     main(shaders);
+
 
 });
