@@ -4,6 +4,7 @@ precision mediump float;
 
 uniform float u_step;
 uniform float u_rand_seed;
+uniform float frame;
 uniform sampler2D u_image;
 varying vec2 v_tex_pos;
 

@@ -1,5 +1,11 @@
 var interestingFuncs = [
-    "v.x = (p.x-p.y);\nv.y = p.y;",
+    `float r = length(p);
+float theta = atan(p.y, p.x);
+v = vec2(p.y, -p.x) / r;
+float t = sqrt(r * 10.) + theta + frame * .02;
+v *= sin(t);
+v *= length(v) * 10.;
+v += p * .2;`,
 "v.x = (cos(min(length(p),p.y)*p.y)+p.x);\nv.y = (sin(cos(max(p.y,length(p))))+cos((p.y-min(p.x,(length(p)-sin(p.x))))));",
 "v.x = p.y;\nv.y = sin(sin(max(length(p),p.x*p.x))*p.x);",
     "v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;\nv.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;",
@@ -111,7 +117,7 @@ function setupProgram(gl, vert, frag){
     }
 }
 
-function updateParticles(gl, updater, res, frame){
+function updateParticles(gl, updater, res, frame, frameCounter){
     gl.useProgram(updater.program.program);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, updater.fb);
@@ -125,6 +131,7 @@ function updateParticles(gl, updater, res, frame){
     gl.uniform1f(updater.program.uniforms.u_particles_resolution, res); // u_particles_resolution
     gl.uniform1f(updater.program.uniforms.u_step, 0.005); // u_step
     gl.uniform1f(updater.program.uniforms.u_rand_seed, Math.random());
+    gl.uniform1f(updater.program.uniforms.frame, frameCounter);
 
     gl.bindTexture(gl.TEXTURE_2D, frame.prev);
 
@@ -329,7 +336,7 @@ function main(shaders = []) {
     // Draw first frame and set the texture to a global variable
     // drawParticles(gl, drawer);
 
-
+    var frameCounter = 0;
 
     // console.log(updater);
     // updateParticles(gl, updater, drawer.resolution, drawer.tex);
@@ -340,7 +347,7 @@ function main(shaders = []) {
         // gl.disable(gl.STENCIL_TEST);
         // gl.bindTexture(gl.TEXTURE_2D, drawer.tex.prev);
 
-        updateParticles(gl, updater, drawer.resolution, drawer.tex);
+        updateParticles(gl, updater, drawer.resolution, drawer.tex, frameCounter);
 
         drawParticles(gl, drawer);
 
@@ -355,6 +362,8 @@ function main(shaders = []) {
         var temp = drawer.tex.drawn;
         drawer.tex.drawn = fader.frame;
         fader.frame = temp;
+
+        frameCounter++;
 
     }, 1000 / 60);
 
@@ -379,7 +388,7 @@ $(document).ready(function(){
     var shader_uniforms = [
         [], //fragment-shader.frag
         ["u_resolution"], //vertex-shader.vert
-        ["u_step", "u_rand_seed", "u_image"], //position_calculator.frag
+        ["u_step", "u_rand_seed", "frame", "u_image"], //position_calculator.frag
         ["u_particles_resolution"], //position_calculator.vert
         [], //point_drawer.frag
         ["u_image", "u_particles_resolution"],  //point_drawer.vert
