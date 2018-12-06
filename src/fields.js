@@ -6,7 +6,24 @@ float t = sqrt(r * 10.) + theta + frame * .02;
 v *= sin(t);
 v *= length(v) * 10.;
 v += p * .2;`,
-"v.x = (cos(min(length(p),p.y)*p.y)+p.x);\nv.y = (sin(cos(max(p.y,length(p))))+cos((p.y-min(p.x,(length(p)-sin(p.x))))));",
+`p = p / 10.0;
+float a = sin(frame*0.05 - length(p)*4.0);
+
+float b = sin(a);
+float c = cos(a);
+
+b = b*b*b;
+c = c*c*c*c;
+
+v.x = (-p.y*b 
+- 0.8*p.x*(c))/(4.0*length(p));
+
+v.y = (p.x*b  
+- 0.8*p.y*(c))/(4.0*length(p));
+
+v = v * 10.0;
+p = p * 10.0;
+`,
 "v.x = p.y;\nv.y = sin(sin(max(length(p),p.x*p.x))*p.x);",
     "v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;\nv.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;",
     "v.x = sin((exp(length(p)/cos(p.y))+max(p.y,(p.y+p.x))));\nv.y = sin((p.x-min(sin(p.y),length(p)))*(max(length(p),p.x*sin(p.y))-p.y));"
