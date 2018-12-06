@@ -1,3 +1,21 @@
+var interestingFuncs = [
+    `  v.x = (p.x-p.y);
+  v.y = p.y;`,
+`  v.x = (cos(min(length(p),p.y)*p.y)+p.x);
+  v.y = (sin(cos(max(p.y,length(p))))+cos((p.y-min(p.x,(length(p)-sin(p.x))))));`,
+`v.x = p.y;
+  v.y = sin(sin(max(length(p),p.x*p.x))*p.x);`,
+    `
+   v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;
+   v.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;`,
+    ` v.x = sin((exp(length(p)/cos(p.y))+max(p.y,(p.y+p.x))));
+  v.y = sin((p.x-min(sin(p.y),length(p)))*(max(length(p),p.x*sin(p.y))-p.y));
+`
+];
+
+console.log(interestingFuncs.length);
+
+
 function genField(x, y){
     let data = [];
 
@@ -64,8 +82,8 @@ function setupAttrib(gl, program, size){
 }
 
 function setupProgram(gl, vert, frag){
-    var vertexShader = vert.shader;
-    var fragmentShader = frag.shader;
+    var vertexShader = vert.compiledShader;
+    var fragmentShader = frag.compiledShader;
     var program = createProgram(gl, vertexShader, fragmentShader);
 
     var attributeLocations = {};
@@ -184,7 +202,7 @@ function fadeFrame(gl, fader, texture){
 function setupDrawer(gl, particle_shaders){
     var particle_drawer = setupProgram(gl, particle_shaders[0], particle_shaders[1]);
 
-    var n_particles = 50000;
+    var n_particles = 10000;
     // The number of particles is a perfect square, this is the side length of it
     var particles_resolution = Math.ceil(Math.sqrt(n_particles));
 
@@ -299,7 +317,7 @@ function main(shaders = []) {
     // Create shaders
     for(var i = 0; i <= 6; i++){
         let type = i % 2 === 0 ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER;
-        shaders[i].shader = createShader(gl, type, shaders[i].shader)
+        shaders[i].compiledShader = createShader(gl, type, shaders[i].shader)
     }
 
     console.log("Shaders created");
@@ -324,7 +342,7 @@ function main(shaders = []) {
     // updateParticles(gl, updater, drawer.resolution, drawer.tex);
     // drawParticles(gl, drawer);
 
-    setInterval(function () {
+    return setInterval(function () {
         // gl.disable(gl.DEPTH_TEST);
         // gl.disable(gl.STENCIL_TEST);
         // gl.bindTexture(gl.TEXTURE_2D, drawer.tex.prev);
@@ -341,17 +359,30 @@ function main(shaders = []) {
 
         fadeFrame(gl, fader, drawer.tex.drawn);
 
-        var temp = drawer.tex.drawn
+        var temp = drawer.tex.drawn;
         drawer.tex.drawn = fader.frame;
         fader.frame = temp;
 
     }, 1000 / 60);
 
-    // console.log(drawer.tex);
 
 }
 
 
+function buttonLogic(){
+    $("button").click(function () {
+        $("textarea").val();
+    });
+
+    $("#setDisplay").click(function () {
+        if($("#hide").css("display") === "none"){
+            $("#hide").css("display","");
+        }else{
+            $("#hide").css("display","none");
+        }
+    });
+
+}
 
 
 $(document).ready(function(){
@@ -399,12 +430,26 @@ $(document).ready(function(){
 
     console.log("Shaders loaded");
 
+    var lastField = `v.x = p.y;
+v.y = -p.x;`;
+    var newField;
+
+    shaders[2].shader = shaders[2].shader.replace("{0}", lastField);
+
+    $("textarea").val(lastField);
+
+
+    var timer = main(shaders);
+
     $("button").click(function () {
-        $("textarea").val();
+        clearInterval(timer);
+        newField = $("textarea").val();
+        shaders[2].shader = shaders[2].shader.replace(lastField, newField);
+        lastField = newField;
+        timer = main(shaders);
     });
 
     $("#setDisplay").click(function () {
-        console.log("clicked");
         if($("#hide").css("display") === "none"){
             $("#hide").css("display","");
         }else{
@@ -412,7 +457,17 @@ $(document).ready(function(){
         }
     });
 
-    main(shaders);
+    $(".func").click(function () {
+        clearInterval(timer);
+        newField = interestingFuncs[this.id[this.id.length - 1]];
+        $("textarea").val(newField);
+        shaders[2].shader = shaders[2].shader.replace(lastField, newField);
+        lastField = newField;
+        timer = main(shaders);
+    });
 
 
 });
+
+
+

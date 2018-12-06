@@ -22,8 +22,8 @@ vec4 calculate_new_pos(vec2 p){
     // Here goes the vector field function
 
     // One version
-    v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;
-    v.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;
+//    v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;
+//    v.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;
 
 // Second
 //    v.x =  pow(abs(p.y / 10.0), abs(p.x / 10.0));
@@ -34,7 +34,7 @@ vec4 calculate_new_pos(vec2 p){
 //
 //  v.x = sin((max(p.y/p.x,p.x)-log(p.y)))/min(length(p),sin(sin(p.x)));
 //  v.y = min(sin(p.y)/cos(p.x),pow(min(p.y/p.y,p.x), p.x)*p.y);
-
+    {0}
 
     vec4 returned = vec4((p + v * u_step) / 10.0 + vec2(0.5, 0.5), v / 10.0);
 
@@ -55,7 +55,7 @@ void main(){
 
     vec2 seed = (new_pos + v_tex_pos) * u_rand_seed;
 
-    float drop_rate = 0.001 + length(t.zw) * 0.01;
+    float drop_rate = 0.01 + length(t.zw) * 0.01;
     float drop = step(1.0 - drop_rate, rand(seed));
 
     vec2 random_pos = vec2(

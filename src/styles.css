@@ -5,3 +5,11 @@ html, body {
     max-height: 100%;
     max-width: 100%;
 }
+
+#hide {
+    text-align: center;
+    background: #FFFFFF;
+    width: 25%;
+    margin:5px;
+    border-radius:5px;
+}
