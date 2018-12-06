@@ -26,7 +26,13 @@ p = p * 10.0;
 `,
 "v.x = p.y;\nv.y = sin(sin(max(length(p),p.x*p.x))*p.x);",
     "v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;\nv.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;",
-    "v.x = sin((exp(length(p)/cos(p.y))+max(p.y,(p.y+p.x))));\nv.y = sin((p.x-min(sin(p.y),length(p)))*(max(length(p),p.x*sin(p.y))-p.y));"
+    "v.x = sin((exp(length(p)/cos(p.y))+max(p.y,(p.y+p.x))));\nv.y = sin((p.x-min(sin(p.y),length(p)))*(max(length(p),p.x*sin(p.y))-p.y));",
+    ` float w = p.y - cos(p.x);
+float u = 2.*exp(-pow(w,2.));
+v.y = (-2.*w)*sin(p.x)*exp(-pow(p.y,2.));
+v.x = -(-2.*w);
+v = 0.5*v/w*exp(u);
+`
 ];
 
 console.log(interestingFuncs.length);
