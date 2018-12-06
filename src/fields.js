@@ -1,16 +1,9 @@
 var interestingFuncs = [
-    `  v.x = (p.x-p.y);
-  v.y = p.y;`,
-`  v.x = (cos(min(length(p),p.y)*p.y)+p.x);
-  v.y = (sin(cos(max(p.y,length(p))))+cos((p.y-min(p.x,(length(p)-sin(p.x))))));`,
-`v.x = p.y;
-  v.y = sin(sin(max(length(p),p.x*p.x))*p.x);`,
-    `
-   v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;
-   v.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;`,
-    ` v.x = sin((exp(length(p)/cos(p.y))+max(p.y,(p.y+p.x))));
-  v.y = sin((p.x-min(sin(p.y),length(p)))*(max(length(p),p.x*sin(p.y))-p.y));
-`
+    "v.x = (p.x-p.y);\nv.y = p.y;",
+"v.x = (cos(min(length(p),p.y)*p.y)+p.x);\nv.y = (sin(cos(max(p.y,length(p))))+cos((p.y-min(p.x,(length(p)-sin(p.x))))));",
+"v.x = p.y;\nv.y = sin(sin(max(length(p),p.x*p.x))*p.x);",
+    "v.x =  -2.0 * mod(floor(p.y * 10.0), 2.0) + 1.0;\nv.y =  -2.0 * mod(floor(p.x * 10.0), 2.0) + 1.0;",
+    "v.x = sin((exp(length(p)/cos(p.y))+max(p.y,(p.y+p.x))));\nv.y = sin((p.x-min(sin(p.y),length(p)))*(max(length(p),p.x*sin(p.y))-p.y));"
 ];
 
 console.log(interestingFuncs.length);
@@ -369,22 +362,6 @@ function main(shaders = []) {
 }
 
 
-function buttonLogic(){
-    $("button").click(function () {
-        $("textarea").val();
-    });
-
-    $("#setDisplay").click(function () {
-        if($("#hide").css("display") === "none"){
-            $("#hide").css("display","");
-        }else{
-            $("#hide").css("display","none");
-        }
-    });
-
-}
-
-
 $(document).ready(function(){
 
     var shaders = [];
@@ -441,9 +418,18 @@ v.y = -p.x;`;
 
     var timer = main(shaders);
 
-    $("button").click(function () {
+    $("#enter").click(function () {
         clearInterval(timer);
         newField = $("textarea").val();
+        shaders[2].shader = shaders[2].shader.replace(lastField, newField);
+        lastField = newField;
+        timer = main(shaders);
+    });
+
+    $("#random").click(function () {
+        clearInterval(timer);
+        newField = generate();
+        $("textarea").val(newField);
         shaders[2].shader = shaders[2].shader.replace(lastField, newField);
         lastField = newField;
         timer = main(shaders);
