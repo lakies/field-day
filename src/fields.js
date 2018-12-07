@@ -225,7 +225,7 @@ function fadeFrame(gl, fader, texture){
 function setupDrawer(gl, particle_shaders){
     var particle_drawer = setupProgram(gl, particle_shaders[0], particle_shaders[1]);
 
-    var n_particles = 10000;
+    var n_particles = 30000;
     // The number of particles is a perfect square, this is the side length of it
     var particles_resolution = Math.ceil(Math.sqrt(n_particles));
 
